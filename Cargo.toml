@@ -1,0 +1,12 @@
+[package]
+name = "fractals_api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4.3.1"
+dotenvy = "0.15.7"
+serde = "1.0.163"
+wgpu = "0.16.1"
