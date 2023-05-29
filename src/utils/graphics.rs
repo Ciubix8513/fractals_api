@@ -1,0 +1,142 @@
+#![allow(clippy::match_single_binding)]
+use std::sync::Mutex;
+
+use crate::{grimoire, Fractals};
+use wgpu::{include_wgsl, RenderPipeline, RequestDeviceError};
+
+use super::GpuStructs;
+
+//I'm gonna hard code the buffers for now, tho it may be a good idea to not do it
+pub struct PipelineBufers {
+    pub pipeline: RenderPipeline,
+    pub info_buffer: wgpu::Buffer,
+    pub bind_group: wgpu::BindGroup,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+pub struct ShaderDataUniforms {
+    pub position: [f32; 2],
+    pub resolution: [u32; 2],
+    pub aspect: f32,
+    pub zoom: f32,
+    pub arr_len: u32,
+    pub max_iter: u32,
+    pub num_colors: u32,
+    pub msaa: u32,
+}
+
+impl ShaderDataUniforms {
+    pub fn raw(&self) -> [u32; 10] {
+        [
+            self.position[0].to_bits(),
+            self.position[1].to_bits(),
+            self.resolution[0],
+            self.resolution[1],
+            self.aspect.to_bits(),
+            self.zoom.to_bits(),
+            self.arr_len,
+            self.max_iter,
+            self.num_colors,
+            self.msaa,
+        ]
+    }
+}
+
+pub async fn get_device() -> Result<GpuStructs, RequestDeviceError> {
+    let instance = wgpu::Instance::default();
+
+    let adapter = instance
+        .request_adapter(&wgpu::RequestAdapterOptionsBase {
+            power_preference: wgpu::PowerPreference::default(),
+            force_fallback_adapter: false,
+            compatible_surface: None,
+        })
+        .await
+        .expect("Unable to get an adapter");
+
+    let (device, queue) = adapter
+        .request_device(&wgpu::DeviceDescriptor::default(), None)
+        .await?;
+    let staging_belt = Mutex::new(wgpu::util::StagingBelt::new(grimoire::STAGING_BELT_SIZE));
+
+    Ok(GpuStructs {
+        queue,
+        device,
+        staging_belt,
+    })
+}
+
+pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineBufers {
+    //Have the same vertex shader for all fractals
+    let vertex = device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));
+
+    let fragment = device.create_shader_module(match fractal {
+        _ => include_wgsl!("../shaders/frag_test.wgsl"),
+    });
+
+    let info_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: 10 * 4,
+        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::UNIFORM,
+        mapped_at_creation: false,
+    });
+
+    let bg_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some(&format!("{fractal:#?} bind group layout")),
+        entries: &[wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            visibility: wgpu::ShaderStages::FRAGMENT | wgpu::ShaderStages::VERTEX,
+            ty: wgpu::BindingType::Buffer {
+                ty: wgpu::BufferBindingType::Uniform,
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
+            count: None,
+        }],
+    });
+
+    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: None,
+        layout: &bg_layout,
+        entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: info_buffer.as_entire_binding(),
+        }],
+    });
+
+    let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some(&format!("{fractal:#?} pipeline layout")),
+        bind_group_layouts: &[&bg_layout],
+        push_constant_ranges: &[],
+    });
+    PipelineBufers {
+        pipeline: device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some(&format!("{fractal:#?} pipeline")),
+            layout: Some(&layout),
+            vertex: wgpu::VertexState {
+                module: &vertex,
+                entry_point: "main",
+                buffers: &[],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &fragment,
+                entry_point: "main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: grimoire::FORMAT,
+                    blend: Some(wgpu::BlendState {
+                        color: wgpu::BlendComponent::REPLACE,
+                        alpha: wgpu::BlendComponent::REPLACE,
+                    }),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multiview: None,
+        }),
+        info_buffer,
+        bind_group,
+    }
+}

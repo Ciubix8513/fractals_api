@@ -1,3 +1,4 @@
+#![allow(clippy::significant_drop_tightening, clippy::too_many_lines)]
 use actix_web::{
     web::{self, Data},
     HttpResponse, Responder,
@@ -5,17 +6,29 @@ use actix_web::{
 
 use crate::{
     grimoire,
-    utils::{export_vec_to_png, GpuStructs},
+    utils::{
+        export,
+        graphics::{generate_pipeline, ShaderDataUniforms},
+        GpuStructs,
+    },
+    Fractals, PipelineStore,
 };
 
 #[actix_web::get("/test")]
-async fn render_image(gpu: Data<GpuStructs>) -> impl Responder {
-    let mut encoder = gpu
-        .device
-        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-
+async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> impl Responder {
+    //Hardcoding these in this test function
+    let fractal = Fractals::Mandebrot;
     let width = grimoire::DEFAULT_WIDTH;
     let height = grimoire::DEFAULT_HEIGHT;
+
+    let mut pipelines = pipelines.lock().unwrap();
+
+    if !pipelines.contains_key(&fractal) {
+        println!("Generating new pipeline for {fractal:#?}");
+        pipelines.insert(fractal.clone(), generate_pipeline(&fractal, &gpu.device));
+    }
+
+    let pipeline = pipelines.get(&fractal).unwrap();
 
     //I think i need to create a new buffer and texture every time
     let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
@@ -45,8 +58,30 @@ async fn render_image(gpu: Data<GpuStructs>) -> impl Responder {
         mapped_at_creation: false,
     });
 
-    let command_buffer = {
-        encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+    let mut encoder = gpu
+        .device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let data = ShaderDataUniforms {
+        resolution: [width, height],
+        ..Default::default()
+    }
+    .raw();
+
+    let mut staging_belt = gpu.staging_belt.lock().unwrap();
+
+    staging_belt
+        .write_buffer(
+            &mut encoder,
+            &pipeline.info_buffer,
+            0,
+            wgpu::BufferSize::new((data.len() * 4) as wgpu::BufferAddress).unwrap(),
+            &gpu.device,
+        )
+        .copy_from_slice(bytemuck::cast_slice(&data));
+
+    {
+        //Clear
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render image pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &texture_view,
@@ -59,6 +94,12 @@ async fn render_image(gpu: Data<GpuStructs>) -> impl Responder {
             depth_stencil_attachment: None,
         });
 
+        render_pass.set_bind_group(0, &pipeline.bind_group, &[]);
+        render_pass.set_pipeline(&pipeline.pipeline);
+        render_pass.draw(0..6, 0..1);
+    }
+    {
+        //Copy contents of render texture to the buffer
         encoder.copy_texture_to_buffer(
             texture.as_image_copy(),
             wgpu::ImageCopyBufferBase {
@@ -71,10 +112,13 @@ async fn render_image(gpu: Data<GpuStructs>) -> impl Responder {
             },
             texture.size(),
         );
-        encoder.finish()
-    };
+    }
 
+    let command_buffer = encoder.finish();
+
+    staging_belt.finish();
     gpu.queue.submit(Some(command_buffer));
+    staging_belt.recall();
 
     let slice = buffer.slice(..);
     slice.map_async(wgpu::MapMode::Read, |_| {});
@@ -85,7 +129,7 @@ async fn render_image(gpu: Data<GpuStructs>) -> impl Responder {
         .iter()
         .copied()
         .collect::<Vec<u8>>();
-    let byte_stream = export_vec_to_png(&img, height, width, image::ImageOutputFormat::Png);
+    let byte_stream = export::vec_to_png(&img, width, height, image::ImageOutputFormat::Png);
 
     let stream = futures::stream::iter(Some(Ok::<web::Bytes, std::io::Error>(web::Bytes::from(
         byte_stream,

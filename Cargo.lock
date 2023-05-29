@@ -729,6 +729,7 @@ name = "fractals_api"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "bytemuck",
  "dotenvy",
  "env_logger",
  "futures",

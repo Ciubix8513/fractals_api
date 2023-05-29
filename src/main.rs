@@ -1,15 +1,28 @@
-#![allow(clippy::unused_async, clippy::wildcard_imports)]
+#![allow(
+    clippy::unused_async,
+    clippy::wildcard_imports,
+    clippy::future_not_send
+)]
+use std::collections::HashMap;
 use std::env;
+use std::sync::Mutex;
 
 use actix_web::{middleware, App, HttpServer};
 use dotenvy::dotenv;
+use utils::graphics::{get_device, PipelineBufers};
 
 use crate::endpoints::*;
-use crate::utils::get_device;
 
 mod endpoints;
 mod grimoire;
 mod utils;
+
+#[derive(Eq, Hash, PartialEq, Debug, Clone)]
+pub enum Fractals {
+    Mandebrot,
+    Custom(String),
+}
+pub type PipelineStore = Mutex<HashMap<Fractals, PipelineBufers>>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -26,6 +39,9 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(main_page)
             .data_factory(|| async { get_device().await })
+            .app_data(actix_web::web::Data::new(
+                PipelineStore::new(HashMap::new()),
+            ))
             .service(render_image)
             .wrap(middleware::Logger::default())
     })
@@ -38,6 +54,9 @@ async fn main() -> std::io::Result<()> {
 async fn renderer_test() {
     let mut app = actix_web::test::init_service(
         App::new()
+            .app_data(actix_web::web::Data::new(
+                PipelineStore::new(HashMap::new()),
+            ))
             .data_factory(|| async { get_device().await })
             .service(render_image),
     )
