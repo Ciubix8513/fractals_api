@@ -1,6 +1,5 @@
 struct ShaderDataUniforms {
   position: vec2<f32>,
-  resolution: vec2<u32>,
   aspect: f32,
   zoom: f32,
   arr_len: i32,

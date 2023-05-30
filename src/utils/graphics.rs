@@ -18,7 +18,6 @@ pub struct PipelineBufers {
 #[derive(Clone, Copy, Default)]
 pub struct ShaderDataUniforms {
     pub position: [f32; 2],
-    pub resolution: [u32; 2],
     pub aspect: f32,
     pub zoom: f32,
     pub arr_len: u32,
@@ -28,12 +27,10 @@ pub struct ShaderDataUniforms {
 }
 
 impl ShaderDataUniforms {
-    pub fn raw(&self) -> [u32; 10] {
+    pub fn raw(&self) -> [u32; 8] {
         [
             self.position[0].to_bits(),
             self.position[1].to_bits(),
-            self.resolution[0],
-            self.resolution[1],
             self.aspect.to_bits(),
             self.zoom.to_bits(),
             self.arr_len,
@@ -105,7 +102,7 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
         entries: &[
             wgpu::BindGroupLayoutEntry {
                 binding: 0,
-                visibility: wgpu::ShaderStages::FRAGMENT | wgpu::ShaderStages::VERTEX,
+                visibility: wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: false,

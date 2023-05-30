@@ -101,7 +101,6 @@ async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> 
     ];
 
     let data = ShaderDataUniforms {
-        resolution: [width, height],
         aspect: height as f32 / width as f32,
         arr_len: colors.len() as u32,
         num_colors: 200,
@@ -175,6 +174,7 @@ async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> 
     staging_belt.finish();
     gpu.queue.submit(Some(command_buffer));
     staging_belt.recall();
+    texture.destroy();
 
     let slice = buffer.slice(..);
     slice.map_async(wgpu::MapMode::Read, |_| {});

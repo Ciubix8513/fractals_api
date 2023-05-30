@@ -3,21 +3,6 @@ struct VertexOutput {
   @location(0) uv: vec2<f32>,
 }
 
-struct ShaderDataUniforms {
-  position: vec2<f32>,
-  resolution: vec2<u32>,
-  aspect: f32,
-  zoom: f32,
-  arr_len: i32,
-  max_iter: u32,
-  color_num: u32,
-  flags: u32,
-}
-
-@group(0)
-@binding(0)
-var<uniform> uniforms : ShaderDataUniforms;
-
 @vertex
 fn main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
     var out: VertexOutput;
