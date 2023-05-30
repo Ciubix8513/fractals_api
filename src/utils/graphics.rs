@@ -1,4 +1,4 @@
-#![allow(clippy::match_single_binding)]
+#![allow(clippy::cast_possible_truncation)]
 use std::sync::Mutex;
 
 use crate::{grimoire, Fractals};
@@ -10,6 +10,7 @@ use super::GpuStructs;
 pub struct PipelineBufers {
     pub pipeline: RenderPipeline,
     pub info_buffer: wgpu::Buffer,
+    pub storage_buffer: wgpu::Buffer,
     pub bind_group: wgpu::BindGroup,
 }
 
@@ -43,6 +44,15 @@ impl ShaderDataUniforms {
     }
 }
 
+fn color_raw(color: &wgpu::Color) -> Vec<f32> {
+    vec![color.r, color.g, color.b, color.a]
+        .iter()
+        .map(|i| *i as f32)
+        .collect()
+}
+pub fn to_raw_colors(colors: &[wgpu::Color]) -> Vec<f32> {
+    colors.iter().flat_map(color_raw).collect()
+}
 pub async fn get_device() -> Result<GpuStructs, RequestDeviceError> {
     let instance = wgpu::Instance::default();
 
@@ -72,7 +82,8 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
     let vertex = device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));
 
     let fragment = device.create_shader_module(match fractal {
-        _ => include_wgsl!("../shaders/frag_test.wgsl"),
+        Fractals::Mandebrot => include_wgsl!("../shaders/madelbrot.wgsl"),
+        Fractals::Custom(_) => include_wgsl!("../shaders/frag_test.wgsl"),
     });
 
     let info_buffer = device.create_buffer(&wgpu::BufferDescriptor {
@@ -82,27 +93,52 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
         mapped_at_creation: false,
     });
 
+    let storage_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: 4 * 4 * grimoire::MAX_COLORS,
+        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::STORAGE,
+        mapped_at_creation: false,
+    });
+
     let bg_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some(&format!("{fractal:#?} bind group layout")),
-        entries: &[wgpu::BindGroupLayoutEntry {
-            binding: 0,
-            visibility: wgpu::ShaderStages::FRAGMENT | wgpu::ShaderStages::VERTEX,
-            ty: wgpu::BindingType::Buffer {
-                ty: wgpu::BufferBindingType::Uniform,
-                has_dynamic_offset: false,
-                min_binding_size: None,
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::FRAGMENT | wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
             },
-            count: None,
-        }],
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+        ],
     });
 
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         label: None,
         layout: &bg_layout,
-        entries: &[wgpu::BindGroupEntry {
-            binding: 0,
-            resource: info_buffer.as_entire_binding(),
-        }],
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: info_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: storage_buffer.as_entire_binding(),
+            },
+        ],
     });
 
     let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -137,6 +173,7 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
             multiview: None,
         }),
         info_buffer,
+        storage_buffer,
         bind_group,
     }
 }

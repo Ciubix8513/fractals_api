@@ -7,7 +7,7 @@ struct ShaderDataUniforms {
   arr_len: i32,
   max_iter: u32,
   color_num: u32,
-  msaa: u32,
+  flags: u32,
 }
 
 struct VertexOutput {
@@ -19,6 +19,9 @@ struct VertexOutput {
 @group(0)
 @binding(0)
 var<uniform> uniforms : ShaderDataUniforms;
+@group(0)
+@binding(1)
+var<storage, read>  colors : array<vec4<f32>>;
 
 @fragment
 fn main(in: VertexOutput) -> @location(0) vec4<f32> {

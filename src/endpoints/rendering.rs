@@ -1,4 +1,9 @@
-#![allow(clippy::significant_drop_tightening, clippy::too_many_lines)]
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::significant_drop_tightening,
+    clippy::too_many_lines
+)]
 use actix_web::{
     web::{self, Data},
     HttpResponse, Responder,
@@ -8,7 +13,7 @@ use crate::{
     grimoire,
     utils::{
         export,
-        graphics::{generate_pipeline, ShaderDataUniforms},
+        graphics::{generate_pipeline, to_raw_colors, ShaderDataUniforms},
         GpuStructs,
     },
     Fractals, PipelineStore,
@@ -61,9 +66,49 @@ async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> 
     let mut encoder = gpu
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
+    let colors = [
+        wgpu::Color {
+            r: 85.0 / 255.0,
+            g: 205.0 / 255.0,
+            b: 252.0 / 255.0,
+            a: 1.0,
+        },
+        wgpu::Color {
+            r: 247.0 / 255.0,
+            g: 168.0 / 255.0,
+            b: 184.0 / 255.0,
+            a: 1.0,
+        },
+        wgpu::Color {
+            r: 1.0,
+            g: 1.0,
+            b: 1.0,
+            a: 1.0,
+        },
+        wgpu::Color {
+            r: 247.0 / 255.0,
+            g: 168.0 / 255.0,
+            b: 184.0 / 255.0,
+            a: 1.0,
+        },
+        wgpu::Color {
+            r: 85.0 / 255.0,
+            g: 205.0 / 255.0,
+            b: 252.0 / 255.0,
+            a: 1.0,
+        },
+    ];
+
     let data = ShaderDataUniforms {
         resolution: [width, height],
-        ..Default::default()
+        aspect: height as f32 / width as f32,
+        arr_len: colors.len() as u32,
+        num_colors: 200,
+        msaa: 1,
+        max_iter: 1000,
+        position: [-0.75, 0.0],
+        zoom: 0.75,
     }
     .raw();
 
@@ -79,6 +124,17 @@ async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> 
         )
         .copy_from_slice(bytemuck::cast_slice(&data));
 
+    let colors = to_raw_colors(&colors);
+
+    staging_belt
+        .write_buffer(
+            &mut encoder,
+            &pipeline.storage_buffer,
+            0,
+            wgpu::BufferSize::new((colors.len() * 4) as wgpu::BufferAddress).unwrap(),
+            &gpu.device,
+        )
+        .copy_from_slice(bytemuck::cast_slice(&colors));
     {
         //Clear
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
