@@ -9,12 +9,14 @@ use std::sync::Mutex;
 
 use actix_web::{middleware, App, HttpServer};
 use dotenvy::dotenv;
-use utils::graphics::{get_device, PipelineBufers};
+use structs::rendering::PipelineBufers;
+use utils::graphics::get_device;
 
 use crate::endpoints::*;
 
 mod endpoints;
 mod grimoire;
+mod structs;
 mod utils;
 
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]

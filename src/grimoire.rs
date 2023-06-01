@@ -17,3 +17,36 @@ pub const MAX_COLORS: u64 = 512;
 //Flags
 pub const SMOOTH_FLAG: u32 = 2 << 31;
 pub const DEBUG_FLAG: u32 = 2 << 30;
+
+pub const DEFAULT_COLORS: [wgpu::Color; 5] = [
+    wgpu::Color {
+        r: 85.0 / 255.0,
+        g: 205.0 / 255.0,
+        b: 252.0 / 255.0,
+        a: 1.0,
+    },
+    wgpu::Color {
+        r: 247.0 / 255.0,
+        g: 168.0 / 255.0,
+        b: 184.0 / 255.0,
+        a: 1.0,
+    },
+    wgpu::Color {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    },
+    wgpu::Color {
+        r: 247.0 / 255.0,
+        g: 168.0 / 255.0,
+        b: 184.0 / 255.0,
+        a: 1.0,
+    },
+    wgpu::Color {
+        r: 85.0 / 255.0,
+        g: 205.0 / 255.0,
+        b: 252.0 / 255.0,
+        a: 1.0,
+    },
+];

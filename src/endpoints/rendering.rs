@@ -11,9 +11,10 @@ use actix_web::{
 
 use crate::{
     grimoire,
+    structs::rendering::ShaderDataUniforms,
     utils::{
         export,
-        graphics::{generate_pipeline, to_raw_colors, ShaderDataUniforms},
+        graphics::{generate_pipeline, to_raw_colors},
         GpuStructs,
     },
     Fractals, PipelineStore,
@@ -67,38 +68,7 @@ async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> 
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
-    let colors = [
-        wgpu::Color {
-            r: 85.0 / 255.0,
-            g: 205.0 / 255.0,
-            b: 252.0 / 255.0,
-            a: 1.0,
-        },
-        wgpu::Color {
-            r: 247.0 / 255.0,
-            g: 168.0 / 255.0,
-            b: 184.0 / 255.0,
-            a: 1.0,
-        },
-        wgpu::Color {
-            r: 1.0,
-            g: 1.0,
-            b: 1.0,
-            a: 1.0,
-        },
-        wgpu::Color {
-            r: 247.0 / 255.0,
-            g: 168.0 / 255.0,
-            b: 184.0 / 255.0,
-            a: 1.0,
-        },
-        wgpu::Color {
-            r: 85.0 / 255.0,
-            g: 205.0 / 255.0,
-            b: 252.0 / 255.0,
-            a: 1.0,
-        },
-    ];
+    let colors = grimoire::DEFAULT_COLORS;
 
     let data = ShaderDataUniforms {
         aspect: height as f32 / width as f32,
