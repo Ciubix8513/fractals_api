@@ -1,12 +1,4 @@
-use std::sync::Mutex;
-
-use wgpu::{util::StagingBelt, Device, Queue};
-
-pub struct GpuStructs {
-    pub queue: Queue,
-    pub device: Device,
-    pub staging_belt: Mutex<StagingBelt>,
-}
-
+///Contains various export functions
 pub mod export;
+///Contains everything related to rendering
 pub mod graphics;

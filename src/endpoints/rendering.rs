@@ -11,15 +11,15 @@ use actix_web::{
 
 use crate::{
     grimoire,
-    structs::rendering::ShaderDataUniforms,
+    structs::rendering::{Fractals, GpuStructs, ShaderDataUniforms},
     utils::{
         export,
         graphics::{generate_pipeline, to_raw_colors},
-        GpuStructs,
     },
-    Fractals, PipelineStore,
+    PipelineStore,
 };
 
+///An endpoint for initial development, not meant for actual use
 #[actix_web::get("/test")]
 async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> impl Responder {
     //Hardcoding these in this test function
@@ -73,11 +73,7 @@ async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> 
     let data = ShaderDataUniforms {
         aspect: height as f32 / width as f32,
         arr_len: colors.len() as u32,
-        num_colors: 200,
-        msaa: 1,
-        max_iter: 1000,
-        position: [-0.75, 0.0],
-        zoom: 0.75,
+        ..Default::default()
     }
     .raw();
 
@@ -155,7 +151,7 @@ async fn render_image(gpu: Data<GpuStructs>, pipelines: Data<PipelineStore>) -> 
         .iter()
         .copied()
         .collect::<Vec<u8>>();
-    let byte_stream = export::vec_to_png(&img, width, height, image::ImageOutputFormat::Png);
+    let byte_stream = export::arr_to_image(&img, width, height, image::ImageOutputFormat::Png);
 
     let stream = futures::stream::iter(Some(Ok::<web::Bytes, std::io::Error>(web::Bytes::from(
         byte_stream,

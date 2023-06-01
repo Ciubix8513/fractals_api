@@ -1,21 +1,28 @@
 #![allow(clippy::cast_possible_truncation)]
+use crate::{
+    grimoire,
+    structs::rendering::{Fractals, GpuStructs, PipelineBufers},
+};
 use std::sync::Mutex;
-
-use crate::{grimoire, structs::rendering::PipelineBufers, Fractals};
 use wgpu::{include_wgsl, RequestDeviceError};
 
-use super::GpuStructs;
-
-fn color_raw(color: &wgpu::Color) -> Vec<f32> {
-    vec![color.r, color.g, color.b, color.a]
-        .iter()
-        .map(|i| *i as f32)
-        .collect()
+///Flatten `wgpu::Color` into a `[f32; 4]`
+pub const fn color_raw(color: &wgpu::Color) -> [f32; 4] {
+    [
+        color.r as f32,
+        color.g as f32,
+        color.b as f32,
+        color.a as f32,
+    ]
 }
+
+///Flattens an array of `wgpu::Color` into a `Vec<f32>`
 pub fn to_raw_colors(colors: &[wgpu::Color]) -> Vec<f32> {
     colors.iter().flat_map(color_raw).collect()
 }
-pub async fn get_device() -> Result<GpuStructs, RequestDeviceError> {
+
+///Gets all necessary wgpu structures for the work of the API
+pub async fn generate_backend() -> Result<GpuStructs, RequestDeviceError> {
     let instance = wgpu::Instance::default();
 
     let adapter = instance
@@ -39,6 +46,7 @@ pub async fn get_device() -> Result<GpuStructs, RequestDeviceError> {
     })
 }
 
+///Generates a pipeline for rendering a specific type of fractal
 pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineBufers {
     //Have the same vertex shader for all fractals
     let vertex = device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));

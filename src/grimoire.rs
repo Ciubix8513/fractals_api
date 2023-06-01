@@ -11,13 +11,17 @@ pub const CLEAR_COLOR: wgpu::Color = wgpu::Color {
     a: 1.0,
 };
 pub const STAGING_BELT_SIZE: u64 = 2048;
+pub const MAX_COLORS: u64 = 1024;
 
-pub const MAX_COLORS: u64 = 512;
-
-//Flags
-pub const SMOOTH_FLAG: u32 = 2 << 31;
-pub const DEBUG_FLAG: u32 = 2 << 30;
-
+///Flags for changing how the fractal is rendered
+pub mod rendering_flags {
+    ///Switches to using the smooth iteration count calculation algorithm
+    ///See: <https://iquilezles.org/articles/msetsmooth/>
+    pub const SMOOTH_FLAG: u32 = 2 << 31;
+    ///Renders a debug grid over the fractal, for easier definition of the position
+    pub const DEBUG_FLAG: u32 = 2 << 30;
+}
+///Default colors for the fractal, taken from the trans flag 🏳️‍⚧️
 pub const DEFAULT_COLORS: [wgpu::Color; 5] = [
     wgpu::Color {
         r: 85.0 / 255.0,

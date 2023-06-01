@@ -5,26 +5,22 @@
 )]
 use std::collections::HashMap;
 use std::env;
-use std::sync::Mutex;
 
 use actix_web::{middleware, App, HttpServer};
 use dotenvy::dotenv;
-use structs::rendering::PipelineBufers;
-use utils::graphics::get_device;
+use structs::rendering::PipelineStore;
+use utils::graphics::generate_backend;
 
 use crate::endpoints::*;
 
+///Module to contain all the endpoints
 mod endpoints;
+///Module to store all the magic words
 mod grimoire;
+///Structure/Enum definitions
 mod structs;
+///Various utility functions
 mod utils;
-
-#[derive(Eq, Hash, PartialEq, Debug, Clone)]
-pub enum Fractals {
-    Mandebrot,
-    Custom(String),
-}
-pub type PipelineStore = Mutex<HashMap<Fractals, PipelineBufers>>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -40,7 +36,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .service(main_page)
-            .data_factory(|| async { get_device().await })
+            .data_factory(|| async { generate_backend().await })
             .app_data(actix_web::web::Data::new(
                 PipelineStore::new(HashMap::new()),
             ))
@@ -59,7 +55,7 @@ async fn renderer_test() {
             .app_data(actix_web::web::Data::new(
                 PipelineStore::new(HashMap::new()),
             ))
-            .data_factory(|| async { get_device().await })
+            .data_factory(|| async { generate_backend().await })
             .service(render_image),
     )
     .await;

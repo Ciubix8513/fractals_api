@@ -2,7 +2,8 @@ use std::io::Cursor;
 
 use image::{ImageBuffer, Rgba};
 
-pub fn vec_to_png(
+///Transforms an array of raw image bytes into a specified format
+pub fn arr_to_image(
     img: &[u8],
     width: u32,
     height: u32,
