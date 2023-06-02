@@ -13,4 +13,7 @@ env_logger = "0.10.0"
 futures = "0.3.28"
 image = "0.24.6"
 serde = "1.0.163"
-wgpu = "0.16.1"
+serde_derive = "1.0.163"
+serde_json = "1.0.96"
+# Gotta have replay so that wgpu color is serializable
+wgpu = { version = "0.16.1", features = ["replay"] }

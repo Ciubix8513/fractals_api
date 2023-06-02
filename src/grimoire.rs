@@ -2,6 +2,10 @@
 
 pub const DEFAULT_WIDTH: u32 = 1920;
 pub const DEFAULT_HEIGHT: u32 = 1080;
+pub const DEFUALT_MAX_ITER: u32 = 1000;
+pub const DEFAULT_NUM_COLORS: u32 = 200;
+pub const DEFAULT_POSITION: [f32; 2] = [-0.75, 0.0];
+pub const DEFAULT_ZOOM: f32 = 1.0;
 
 pub const FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
 pub const CLEAR_COLOR: wgpu::Color = wgpu::Color {

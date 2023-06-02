@@ -1,4 +1,4 @@
-#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_possible_truncation, clippy::cast_lossless)]
 use crate::{
     grimoire,
     structs::rendering::{Fractals, GpuStructs, PipelineBufers},
@@ -21,21 +21,21 @@ pub fn to_raw_colors(colors: &[wgpu::Color]) -> Vec<f32> {
     colors.iter().flat_map(color_raw).collect()
 }
 
-pub fn vec_from_hex(hex: &[String]) -> Result<Vec<wgpu::Color>, String> {
+pub fn vec_from_hex(hex: &[&str]) -> Result<Vec<wgpu::Color>, String> {
     hex.iter().map(|h| from_hex(h)).collect()
 }
 
-///Converts a hex string #ffffffff into `wgpu::Color`
+///Converts a hex string ffffffff into `wgpu::Color`
+///No hash check bc it's reserved in urls and I don't want to have to input %23
 pub fn from_hex(hex: &str) -> Result<wgpu::Color, String> {
-    if hex.len() != 9 || !hex.starts_with('#') {
+    if hex.len() != 8 {
         return Err("Invalid hex color format".to_string());
     }
 
-    let hex_digits = &hex[1..];
-    let red = u8::from_str_radix(&hex_digits[0..2], 16).map_err(|e| e.to_string())?;
-    let green = u8::from_str_radix(&hex_digits[2..4], 16).map_err(|e| e.to_string())?;
-    let blue = u8::from_str_radix(&hex_digits[4..6], 16).map_err(|e| e.to_string())?;
-    let alpha = u8::from_str_radix(&hex_digits[6..8], 16).map_err(|e| e.to_string())?;
+    let red = u8::from_str_radix(&hex[0..2], 16).map_err(|e| e.to_string())?;
+    let green = u8::from_str_radix(&hex[2..4], 16).map_err(|e| e.to_string())?;
+    let blue = u8::from_str_radix(&hex[4..6], 16).map_err(|e| e.to_string())?;
+    let alpha = u8::from_str_radix(&hex[6..8], 16).map_err(|e| e.to_string())?;
 
     let color = wgpu::Color {
         r: red as f64 / 255.0,
@@ -176,14 +176,14 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
 
 #[test]
 fn test_hex_to_color() {
-    let hex = "#ffffffff";
+    let hex = "ffffffff";
     let color = from_hex(hex);
     assert_ne!(color.is_err(), true);
 }
 
 #[test]
 fn test_hex_vec_to_color() {
-    let hex = vec!["#ffffffff".to_string(), "#ffffffff".to_string()];
+    let hex = vec!["ffffffff", "ffffffff"];
     let color = vec_from_hex(&hex);
     assert_ne!(color.is_err(), true);
 }

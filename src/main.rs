@@ -15,7 +15,7 @@ use crate::endpoints::*;
 
 ///Module to contain all the endpoints
 mod endpoints;
-///Module to store all the magic words
+///Module to store all the magic values
 mod grimoire;
 ///Structure/Enum definitions
 mod structs;
@@ -41,6 +41,7 @@ async fn main() -> std::io::Result<()> {
                 PipelineStore::new(HashMap::new()),
             ))
             .service(render_image)
+            .service(render_fractal)
             .wrap(middleware::Logger::default())
     })
     .bind((ip, port))?
@@ -62,4 +63,25 @@ async fn renderer_test() {
     let req = actix_web::test::TestRequest::with_uri("/test").to_request();
     let resp = actix_web::test::call_service(&mut app, req).await;
     assert_eq!(resp.status(), actix_web::http::StatusCode::OK);
+}
+
+#[actix_web::test]
+async fn fractals_endpoint_test() {
+    let mut app = actix_web::test::init_service(
+        App::new()
+            .app_data(actix_web::web::Data::new(
+                PipelineStore::new(HashMap::new()),
+            ))
+            .data_factory(|| async { generate_backend().await })
+            .service(render_fractal),
+    )
+    .await;
+    let req = actix_web::test::TestRequest::with_uri("/fractals/Mandelbrot?colors=ffffffff,11ffffff,1100ffff&position_x=-.1&position_y=1&zoom=10&debug=true")
+        .to_request();
+    println!("{}", req.uri());
+    let resp = actix_web::test::call_service(&mut app, req).await;
+    let status = resp.status();
+    println!("{:#?}", resp.into_body());
+
+    assert_eq!(status, actix_web::http::StatusCode::OK);
 }
