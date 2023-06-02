@@ -16,8 +16,9 @@ pub struct PipelineBufers {
     pub bind_group: wgpu::BindGroup,
 }
 
+///Uniforms used by the shader
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct ShaderDataUniforms {
     ///Unscaled position of the center of the image
     pub position: [f32; 2],
@@ -70,7 +71,7 @@ impl ShaderDataUniforms {
 ///Represents types of fractals that the api can render
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]
 pub enum Fractals {
-    Mandebrot,
+    Mandelbrot,
     Custom(String),
 }
 

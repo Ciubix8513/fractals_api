@@ -21,6 +21,32 @@ pub fn to_raw_colors(colors: &[wgpu::Color]) -> Vec<f32> {
     colors.iter().flat_map(color_raw).collect()
 }
 
+pub fn vec_from_hex(hex: &[String]) -> Result<Vec<wgpu::Color>, String> {
+    hex.iter().map(|h| from_hex(h)).collect()
+}
+
+///Converts a hex string #ffffffff into `wgpu::Color`
+pub fn from_hex(hex: &str) -> Result<wgpu::Color, String> {
+    if hex.len() != 9 || !hex.starts_with('#') {
+        return Err("Invalid hex color format".to_string());
+    }
+
+    let hex_digits = &hex[1..];
+    let red = u8::from_str_radix(&hex_digits[0..2], 16).map_err(|e| e.to_string())?;
+    let green = u8::from_str_radix(&hex_digits[2..4], 16).map_err(|e| e.to_string())?;
+    let blue = u8::from_str_radix(&hex_digits[4..6], 16).map_err(|e| e.to_string())?;
+    let alpha = u8::from_str_radix(&hex_digits[6..8], 16).map_err(|e| e.to_string())?;
+
+    let color = wgpu::Color {
+        r: red as f64 / 255.0,
+        g: green as f64 / 255.0,
+        b: blue as f64 / 255.0,
+        a: alpha as f64 / 255.0,
+    };
+
+    Ok(color)
+}
+
 ///Gets all necessary wgpu structures for the work of the API
 pub async fn generate_backend() -> Result<GpuStructs, RequestDeviceError> {
     let instance = wgpu::Instance::default();
@@ -52,7 +78,7 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
     let vertex = device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));
 
     let fragment = device.create_shader_module(match fractal {
-        Fractals::Mandebrot => include_wgsl!("../shaders/madelbrot.wgsl"),
+        Fractals::Mandelbrot => include_wgsl!("../shaders/madelbrot.wgsl"),
         Fractals::Custom(_) => include_wgsl!("../shaders/frag_test.wgsl"),
     });
 
@@ -146,4 +172,18 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
         storage_buffer,
         bind_group,
     }
+}
+
+#[test]
+fn test_hex_to_color() {
+    let hex = "#ffffffff";
+    let color = from_hex(hex);
+    assert_ne!(color.is_err(), true);
+}
+
+#[test]
+fn test_hex_vec_to_color() {
+    let hex = vec!["#ffffffff".to_string(), "#ffffffff".to_string()];
+    let color = vec_from_hex(&hex);
+    assert_ne!(color.is_err(), true);
 }
