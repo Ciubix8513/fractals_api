@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use image::{ImageBuffer, Rgba};
+use image::{ImageBuffer, ImageError, Rgba};
 
 ///Transforms an array of raw image bytes into a specified format
 pub fn arr_to_image(
@@ -8,7 +8,7 @@ pub fn arr_to_image(
     width: u32,
     height: u32,
     format: image::ImageOutputFormat,
-) -> Vec<u8> {
+) -> Result<Vec<u8>, ImageError> {
     let img = img
         .chunks_exact(4)
         .map(|i| {
@@ -32,8 +32,7 @@ pub fn arr_to_image(
         *pixel = i;
     }
     let mut byte_stream = Vec::new();
-    image_buffer
-        .write_to(&mut Cursor::new(&mut byte_stream), format)
-        .unwrap();
-    byte_stream
+    image_buffer.write_to(&mut Cursor::new(&mut byte_stream), format)?;
+
+    Ok(byte_stream)
 }

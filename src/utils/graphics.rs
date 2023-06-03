@@ -73,6 +73,11 @@ pub async fn generate_backend() -> Result<GpuStructs, RequestDeviceError> {
 
 ///Generates a pipeline for rendering a specific type of fractal
 pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineBufers {
+    log::info!(
+        target: grimoire::LOGGING_TARGET,
+        "Generating new pipeline for {fractal}"
+    );
+
     //Have the same vertex shader for all fractals
     let vertex = device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));
 

@@ -75,5 +75,14 @@ pub enum Fractals {
     Custom(String),
 }
 
+impl std::fmt::Display for Fractals {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Mandelbrot => write!(f, "Mandelbrot"),
+            Self::Custom(formula) => write!(f, "Custom, with formula {formula}"),
+        }
+    }
+}
+
 ///A helper type for the api state
 pub type PipelineStore = Mutex<HashMap<Fractals, PipelineBufers>>;

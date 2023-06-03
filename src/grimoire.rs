@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+pub const LOGGING_TARGET: &str = "fractals_api";
+
 pub const DEFAULT_WIDTH: u32 = 1920;
 pub const DEFAULT_HEIGHT: u32 = 1080;
 pub const DEFUALT_MAX_ITER: u32 = 1000;
