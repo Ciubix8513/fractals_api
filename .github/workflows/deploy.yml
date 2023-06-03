@@ -7,7 +7,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
       - name: SSH into server and deploy
-        uses: cross-the-world/ssh-scp-ssh-pipelines@latest
+        uses: cross-the-world/ssh-pipeline@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           user: ${{ secrets.SERVER_USERNAME }}
