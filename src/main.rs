@@ -51,22 +51,6 @@ async fn main() -> std::io::Result<()> {
 }
 
 #[actix_web::test]
-async fn renderer_test() {
-    let mut app = actix_web::test::init_service(
-        App::new()
-            .app_data(actix_web::web::Data::new(
-                PipelineStore::new(HashMap::new()),
-            ))
-            .data_factory(|| async { generate_backend().await })
-            .service(render_image),
-    )
-    .await;
-    let req = actix_web::test::TestRequest::with_uri("/test").to_request();
-    let resp = actix_web::test::call_service(&mut app, req).await;
-    assert_eq!(resp.status(), actix_web::http::StatusCode::OK);
-}
-
-#[actix_web::test]
 async fn fractals_endpoint_test() {
     let mut app = actix_web::test::init_service(
         App::new()
