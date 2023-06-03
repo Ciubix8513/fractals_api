@@ -36,6 +36,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .service(main_page)
+            .service(coloring_page)
             .data_factory(|| async { generate_backend().await })
             .app_data(actix_web::web::Data::new(
                 PipelineStore::new(HashMap::new()),
