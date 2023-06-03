@@ -31,7 +31,14 @@ async fn main() -> std::io::Result<()> {
         .parse()
         .expect("Invalid port number");
 
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    // env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    env_logger::Builder::new()
+        .filter_module("fractals_api", log::LevelFilter::Info)
+        .filter_module("actix_web", log::LevelFilter::Info)
+        .filter_module("actix_server", log::LevelFilter::Info)
+        .filter_module("wgpu", log::LevelFilter::Off)
+        .format_timestamp(None)
+        .init();
 
     HttpServer::new(move || {
         App::new()
