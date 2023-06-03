@@ -190,7 +190,6 @@ async fn render_fractal(
     let mut pipelines = pipelines.lock().unwrap();
 
     if !pipelines.contains_key(&fractal) {
-        println!("Generating new pipeline for {fractal:#?}");
         pipelines.insert(fractal.clone(), generate_pipeline(&fractal, &gpu.device));
     }
 
