@@ -52,7 +52,12 @@ async fn render_fractal(
         pipelines.insert(fractal.clone(), generate_pipeline(&fractal, &gpu.device));
     }
 
-    let pipeline = pipelines.get(&fractal).unwrap();
+    let pipeline = pipelines.get(&fractal);
+    if pipeline.is_none() {
+        log::error!(target: grimoire::LOGGING_TARGET, "Could not get pipeline");
+        return HttpResponse::InternalServerError().into();
+    }
+    let pipeline = pipeline.unwrap();
 
     //Create texture
     let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
@@ -96,6 +101,7 @@ async fn render_fractal(
     if colors.is_err() {
         return HttpResponse::BadRequest().body("Invalid color format");
     }
+
     let colors = colors.unwrap();
 
     let data = ShaderDataUniforms {
@@ -121,26 +127,54 @@ async fn render_fractal(
     }
     .raw();
 
-    let mut staging_belt = gpu.staging_belt.lock().unwrap();
+    let staging_belt = gpu.staging_belt.lock();
+    if staging_belt.is_err() {
+        log::error!(
+            target: grimoire::LOGGING_TARGET,
+            "Could not get staging belt {}",
+            staging_belt.err().unwrap()
+        );
+
+        return HttpResponse::InternalServerError().into();
+    }
+    let mut staging_belt = staging_belt.unwrap();
+
+    let buffer_size = wgpu::BufferSize::new((data.len() * 4) as wgpu::BufferAddress);
+    if buffer_size.is_none() {
+        log::error!(
+            target: grimoire::LOGGING_TARGET,
+            "Could not get data buffer size"
+        );
+        return HttpResponse::InternalServerError().into();
+    }
 
     staging_belt
         .write_buffer(
             &mut encoder,
             &pipeline.info_buffer,
             0,
-            wgpu::BufferSize::new((data.len() * 4) as wgpu::BufferAddress).unwrap(),
+            buffer_size.unwrap(),
             &gpu.device,
         )
         .copy_from_slice(bytemuck::cast_slice(&data));
 
     let colors = to_raw_colors(&colors);
 
+    let color_buffer_size = wgpu::BufferSize::new((colors.len() * 4) as wgpu::BufferAddress);
+    if buffer_size.is_none() {
+        log::error!(
+            target: grimoire::LOGGING_TARGET,
+            "Could not get color buffer size"
+        );
+        return HttpResponse::InternalServerError().into();
+    }
+
     staging_belt
         .write_buffer(
             &mut encoder,
             &pipeline.storage_buffer,
             0,
-            wgpu::BufferSize::new((colors.len() * 4) as wgpu::BufferAddress).unwrap(),
+            color_buffer_size.unwrap(),
             &gpu.device,
         )
         .copy_from_slice(bytemuck::cast_slice(&colors));
