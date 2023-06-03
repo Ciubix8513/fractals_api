@@ -77,9 +77,14 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
     //Have the same vertex shader for all fractals
     let vertex = device.create_shader_module(include_wgsl!("../shaders/vert.wgsl"));
 
-    let fragment = device.create_shader_module(match fractal {
-        Fractals::Mandelbrot => include_wgsl!("../shaders/madelbrot.wgsl"),
-        Fractals::Custom(_) => include_wgsl!("../shaders/frag_test.wgsl"),
+    let mut base = include_str!("../shaders/base_fragment.wgsl").to_owned();
+    let fractal_fn = match fractal {
+        Fractals::Custom(_) | Fractals::Mandelbrot => include_str!("../shaders/madelbrot.wgsl"),
+    };
+    base.push_str(fractal_fn);
+    let fragment = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: None,
+        source: wgpu::ShaderSource::Wgsl(base.into()),
     });
 
     let info_buffer = device.create_buffer(&wgpu::BufferDescriptor {
