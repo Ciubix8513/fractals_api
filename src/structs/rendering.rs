@@ -78,8 +78,8 @@ pub enum Fractals {
 impl std::fmt::Display for Fractals {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Fractals::Mandelbrot => write!(f, "Mandelbrot"),
-            Fractals::Custom(formula) => write!(f, "Custom, with formula {formula}"),
+            Self::Mandelbrot => write!(f, "Mandelbrot"),
+            Self::Custom(formula) => write!(f, "Custom, with formula {formula}"),
         }
     }
 }
