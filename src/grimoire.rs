@@ -21,9 +21,9 @@ pub const MAX_COLORS: u64 = 1024;
 pub mod rendering_flags {
     ///Switches to using the smooth iteration count calculation algorithm
     ///See: <https://iquilezles.org/articles/msetsmooth/>
-    pub const SMOOTH: u32 = 2 << 31;
+    pub const SMOOTH: u32 = 2 << 30;
     ///Renders a debug grid over the fractal, for easier definition of the position
-    pub const DEBUG: u32 = 2 << 30;
+    pub const DEBUG: u32 = 2 << 29;
 }
 ///Default colors for the fractal, taken from the trans flag 🏳️‍⚧️
 pub const DEFAULT_COLORS: [wgpu::Color; 5] = [

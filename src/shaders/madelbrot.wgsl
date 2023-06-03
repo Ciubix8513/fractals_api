@@ -28,25 +28,8 @@ fn rand(s: f32) -> f32 {
 fn complex_square(z: vec2<f32>) -> vec2<f32> {
     return vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
 }
-fn mandelbrot(z: vec2<f32>, c: vec2<f32>) -> vec2<f32> {
-    let c2 = dot(c, c);
-
-    // skip computation inside M1 - https://iquilezles.org/articles/mset1bulb
-    if 256.0 * c2 * c2 - 96.0 * c2 + 32.0 * c.x - 3.0 < 0.0 {
-        return vec2<f32>(69.0, 4200.0);
-    }
-    // skip computation inside M2 - https://iquilezles.org/articles/mset2bulb
-    if 16.0 * (c2 + 2.0 * c.x + 1.0) - 1.0 < 0.0 {
-        return vec2<f32>(69.0, 4200.0);
-    }
-    return complex_square(z) + c;
-}
 fn get_col(coord: f32, col_num: i32) -> vec4<f32> {
 
-    // let colors = array<vec4<f32>,2>(
-    //     vec4<f32>(1.0, 0.0, 0.0, 1.0),
-    //     vec4<f32>(0.0, 1.0, 0.0, 1.0),
-    // );
     if col_num == 1 {
         return colors[0];
     }
@@ -77,10 +60,14 @@ fn fractal(C: vec2<f32>) -> vec4<f32> {
         coords = mandelbrot(coords, C);
         iter += 1u;
     }
+    if iter >= max_iteration {
+        return vec4<f32>(0.0);
+    }
+
     var i = f32(iter);
     if coords.x == 69.0 && coords.y == 4200.0 {
-        i = f32(max_iteration);
-    } else if (uniforms.flags & (2u << 31u)) != 0u {
+        return vec4<f32>(0.0);
+    } else if (uniforms.flags & (2u << 30u)) != 0u {
         i = i - log2(log2(dot(coords, coords))) + 4.0;
     }
     return get_color(C, i, max_iteration);
@@ -88,13 +75,15 @@ fn fractal(C: vec2<f32>) -> vec4<f32> {
 
 @fragment
 fn main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let msaa = uniforms.flags | 255u;
+
     let uv = (in.uv / vec2<f32>(uniforms.aspect, 1.0));
     let transformed_uv = uv / uniforms.zoom + uniforms.position;
-    var col = vec4<f32>(0.0);
+    var col = vec4<f32>(0.0, 0.0, 0.0, 1.0);
     col += fractal(transformed_uv);
 
     //Display debug info
-    if (uniforms.flags & (2u << 30u)) != 0u {
+    if (uniforms.flags & (2u << 29u)) != 0u {
         if length(uv) < 0.025 {
             return vec4<f32>(0.0, 0.0, 1.0, 1.0);
         }
@@ -106,4 +95,18 @@ fn main(in: VertexOutput) -> @location(0) vec4<f32> {
         }
     }
     return col;
+}
+
+fn mandelbrot(z: vec2<f32>, c: vec2<f32>) -> vec2<f32> {
+    let c2 = dot(c, c);
+
+    // skip computation inside M1 - https://iquilezles.org/articles/mset1bulb
+    if 256.0 * c2 * c2 - 96.0 * c2 + 32.0 * c.x - 3.0 < 0.0 {
+        return vec2<f32>(69.0, 4200.0);
+    }
+    // skip computation inside M2 - https://iquilezles.org/articles/mset2bulb
+    if 16.0 * (c2 + 2.0 * c.x + 1.0) - 1.0 < 0.0 {
+        return vec2<f32>(69.0, 4200.0);
+    }
+    return complex_square(z) + c;
 }
