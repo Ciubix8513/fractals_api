@@ -28,20 +28,19 @@ pub fn vec_from_hex(hex: &[&str]) -> Result<Vec<wgpu::Color>, String> {
 ///Converts a hex string ffffffff into `wgpu::Color`
 ///No hash check bc it's reserved in urls and I don't want to have to input %23
 pub fn from_hex(hex: &str) -> Result<wgpu::Color, String> {
-    if hex.len() != 8 {
+    if hex.len() != 6 {
         return Err("Invalid hex color format".to_string());
     }
 
     let red = u8::from_str_radix(&hex[0..2], 16).map_err(|e| e.to_string())?;
     let green = u8::from_str_radix(&hex[2..4], 16).map_err(|e| e.to_string())?;
     let blue = u8::from_str_radix(&hex[4..6], 16).map_err(|e| e.to_string())?;
-    let alpha = u8::from_str_radix(&hex[6..8], 16).map_err(|e| e.to_string())?;
 
     let color = wgpu::Color {
         r: red as f64 / 255.0,
         g: green as f64 / 255.0,
         b: blue as f64 / 255.0,
-        a: alpha as f64 / 255.0,
+        a: 1.0,
     };
 
     Ok(color)
@@ -181,14 +180,14 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
 
 #[test]
 fn test_hex_to_color() {
-    let hex = "ffffffff";
+    let hex = "ffffff";
     let color = from_hex(hex);
     assert_ne!(color.is_err(), true);
 }
 
 #[test]
 fn test_hex_vec_to_color() {
-    let hex = vec!["ffffffff", "ffffffff"];
+    let hex = vec!["ffffff", "ffffff"];
     let color = vec_from_hex(&hex);
     assert_ne!(color.is_err(), true);
 }
