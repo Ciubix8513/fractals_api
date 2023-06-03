@@ -11,9 +11,7 @@ env:
 
 jobs:
   build:
-
-    runs-on: self-hosted
-
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Build
@@ -22,3 +20,25 @@ jobs:
       run: cargo clippy -- -D warnings -D clippy::pedantic -D clippy::nursery
     - name: Run tests
       run: cargo test --verbose
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+     - name: SSH into server and deploy
+       uses: appleboy/ssh-action@v0.4.0
+       with:
+         host: ${{ secrets.SERVER_HOST }}
+         username: ${{ secrets.SERVER_USERNAME }}
+         password: ${{ secrets.SERVER_PASSWORD }}
+         port: ${{ secrets.SERVER_PORT }}
+         script: |
+            cd ~/fractals_api/
+            git pull origin main
+            cargo build --release
+            cd target/release/
+            killall fractals-api
+            tmux new ./fractals-api
+     - name: Notify deployment status
+       if: ${{ success() }}
+       run: echo "Deployment successful!"
+
+    
