@@ -72,6 +72,10 @@ impl ShaderDataUniforms {
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]
 pub enum Fractals {
     Mandelbrot,
+    BurningShip,
+    Tricorn,
+    Feather,
+    Eye,
     Custom(String),
 }
 
@@ -79,6 +83,10 @@ impl std::fmt::Display for Fractals {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Mandelbrot => write!(f, "Mandelbrot"),
+            Self::BurningShip => write!(f, "Burning ship"),
+            Self::Tricorn => write!(f, "Tricorn"),
+            Self::Feather => write!(f, "Feather"),
+            Self::Eye => write!(f, "Eye"),
             Self::Custom(formula) => write!(f, "Custom, with formula {formula}"),
         }
     }

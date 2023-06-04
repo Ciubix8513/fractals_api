@@ -50,7 +50,6 @@ fn fractal(C: vec2<f32>) -> vec3<f32> {
     var coords = vec2<f32>(0.0);
     var iter = 0u;
 
-    var max_dot = 5.0;
     let max_iteration = uniforms.max_iter;
 
     while dot(coords, coords) <= max_dot && iter < max_iteration {
