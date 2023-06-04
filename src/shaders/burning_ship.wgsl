@@ -1,3 +1,5 @@
+const max_dot = 4.0;
+
 fn complex_square(z: vec2<f32>) -> vec2<f32> {
     return vec2<f32>(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
 }

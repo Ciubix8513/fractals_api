@@ -1,3 +1,5 @@
+const max_dot = 200000.0;
+
 fn complex_div(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
     let denumenator = 1.0 / (b.x * b.x + b.y * b.y);
     //Multiplying should be a bit faster
