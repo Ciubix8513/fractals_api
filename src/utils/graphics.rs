@@ -84,6 +84,10 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
     let mut base = include_str!("../shaders/base_fragment.wgsl").to_owned();
     let fractal_fn = match fractal {
         Fractals::Custom(_) | Fractals::Mandelbrot => include_str!("../shaders/madelbrot.wgsl"),
+        Fractals::BurningShip => include_str!("../shaders/burning_ship.wgsl"),
+        Fractals::Tricorn => include_str!("../shaders/tricorn.wgsl"),
+        Fractals::Feather => include_str!("../shaders/feather.wgsl"),
+        Fractals::Eye => include_str!("../shaders/eye.wgsl"),
     };
     base.push_str(fractal_fn);
     let fragment = device.create_shader_module(wgpu::ShaderModuleDescriptor {

@@ -5,6 +5,10 @@ use super::rendering::Fractals;
 #[derive(Debug, Clone, Copy, serde_derive::Deserialize, PartialEq, Eq)]
 pub enum SimplifiedFractals {
     Mandelbrot,
+    BurningShip,
+    Tricorn,
+    Feather,
+    Eye,
     Custom,
 }
 
@@ -16,6 +20,10 @@ impl SimplifiedFractals {
                 assert_ne!(formula, None);
                 Fractals::Custom(formula.unwrap())
             }
+            Self::BurningShip => Fractals::BurningShip,
+            Self::Tricorn => Fractals::Tricorn,
+            Self::Feather => Fractals::Feather,
+            Self::Eye => Fractals::Eye,
         }
     }
 }
