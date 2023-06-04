@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+// #![allow(dead_code)]
 use std::{collections::HashMap, sync::Mutex};
 
 ///Stores all need wgpu structs in the api state
