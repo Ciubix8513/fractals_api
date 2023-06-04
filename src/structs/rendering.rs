@@ -86,7 +86,7 @@ impl std::fmt::Display for Fractals {
             Self::BurningShip => write!(f, "Burning ship"),
             Self::Tricorn => write!(f, "Tricorn"),
             Self::Feather => write!(f, "Feather"),
-            Self::Eye => write!(f, "Mandelbrot"),
+            Self::Eye => write!(f, "Eye"),
             Self::Custom(formula) => write!(f, "Custom, with formula {formula}"),
         }
     }

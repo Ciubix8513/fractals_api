@@ -71,6 +71,7 @@ pub async fn generate_backend() -> Result<GpuStructs, RequestDeviceError> {
     })
 }
 
+#[allow(clippy::too_many_lines)]
 ///Generates a pipeline for rendering a specific type of fractal
 pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineBufers {
     log::info!(
