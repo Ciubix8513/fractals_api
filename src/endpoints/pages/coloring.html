@@ -1,11 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Fractals api</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body>
-    Still WIP sorry
-  </body>
+
+<head>
+  <title>Fractals api</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" type="image/png" href="/fractals/Mandelbrot?width=64&height=64&zoom=100&position_x=-1.4">
+</head>
+
+<body>
+  <h1>Coloring algorithm</h1>
+  <p>Here I'll try to explain how the coloring algorithm works</p>
+  <p>Note, i will not be explaining escape time algorithm or how fractal rendering works generally, if you want to learn
+    more about that, check
+    out <a href="https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set">this wikipedia page</a></p>
+  <p>Anyways onto the explanation</p>
+  <p>The fractal is rendered using the escape time algorithm, on the output of that algorithm looks something like this:
+  </p>
+  <iframe width="640" height="360" frameborder="0"
+    src="https://www.shadertoy.com/embed/mldSWf?gui=true&t=0&paused=true&muted=false" allowfullscreen></iframe>
+  <p>As you can see it generates a gradient from 0 to 1 going outside in, this gradient is used as the input of the next
+    step.</p>
+  <p>Traditionally this gradient would plugged into a color lookup table which results in uneven colors with harsh
+    barriers</p>
+  <p>Instead of that the I'm using a smooth coloring function, that generates a smooth gradient from a given color array
+  </p>
+  <iframe width="640" height="360" frameborder="0"
+    src="https://www.shadertoy.com/embed/mtdXWf?gui=true&t=10&paused=true&muted=false" allowfullscreen></iframe>
+  <p>That function is written is able to change the number of colors it uses, as you can see</p>
+  <iframe width="640" height="360" frameborder="0"
+    src="https://www.shadertoy.com/embed/dldXWf?gui=true&t=10&paused=true&muted=false" allowfullscreen></iframe>
+  <p>So plugging that function into the fractal we get</p>
+  <iframe width="640" height="360" frameborder="0"
+    src="https://www.shadertoy.com/embed/mltSDf?gui=true&t=10&paused=true&muted=false" allowfullscreen></iframe>
+  <p>As you can see it generates a relatively smooth gradient</p>
+  <p>We can still control the number of colors used, which results in</p>
+  <iframe width="640" height="360" frameborder="0"
+    src="https://www.shadertoy.com/embed/mttSDf?gui=true&t=10&paused=true&muted=false" allowfullscreen></iframe>
+  <p>So, now you hopefully understand what num_colors does.</p>
+</body>
+
 </html>
