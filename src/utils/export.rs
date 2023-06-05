@@ -1,5 +1,6 @@
 use std::io::Cursor;
 
+use actix_web::web::Bytes;
 use image::{ImageBuffer, ImageError, Rgba};
 
 ///Transforms an array of raw image bytes into a specified format
@@ -35,4 +36,10 @@ pub fn arr_to_image(
     image_buffer.write_to(&mut Cursor::new(&mut byte_stream), format)?;
 
     Ok(byte_stream)
+}
+
+pub fn async_iter(
+    arr: Vec<u8>,
+) -> futures::stream::Iter<std::option::IntoIter<Result<Bytes, std::io::Error>>> {
+    futures::stream::iter(Some(Ok::<Bytes, std::io::Error>(Bytes::from(arr))))
 }

@@ -4,19 +4,20 @@
     clippy::too_many_lines
 )]
 use actix_web::{
-    web::{self, Bytes, Data},
+    web::{self, Data},
     HttpResponse, Responder,
 };
+use std::{collections::HashMap, sync::Mutex};
 use wgpu::CommandBuffer;
 
 use crate::{
     grimoire,
     structs::{
         rendering::{GpuStructs, PipelineBufers, ShaderDataUniforms},
-        requests::{RequestBody, SimplifiedFractals},
+        requests::{RequestBody, RequestIdentifier, SimplifiedFractals},
     },
     utils::{
-        export,
+        export::{self, async_iter},
         graphics::{generate_pipeline, to_raw_colors, vec_from_hex},
     },
     PipelineStore,
@@ -77,9 +78,22 @@ async fn render_fractal(
     pipelines: Data<PipelineStore>,
     fractal: web::Path<SimplifiedFractals>,
     query: web::Query<RequestBody>,
+    cache: web::Data<Mutex<HashMap<RequestIdentifier, Vec<u8>>>>,
 ) -> impl Responder {
+    let query = query.into_inner();
     let fractal = fractal.into_inner();
-    //A temporary check while it is not implemented
+    let identifier = RequestIdentifier::new(fractal, &query);
+
+    //Putting it in a separate block so that cache is unlocked after the check
+    {
+        let cache = cache.lock().unwrap();
+        if let Some(data) = cache.get(&identifier) {
+            let stream = async_iter(data.clone());
+            log::debug!(target: grimoire::LOGGING_TARGET, "Returning cached data");
+            return HttpResponse::Ok().streaming(stream);
+        }
+    }
+    //A temporary check  while it is not implemented
     if fractal == SimplifiedFractals::Custom {
         return HttpResponse::NotImplemented().into();
     }
@@ -235,10 +249,12 @@ async fn render_fractal(
         );
         return HttpResponse::InternalServerError().body("Unable to export image");
     }
+    let mut cache = cache.lock().unwrap();
 
-    let stream = futures::stream::iter(Some(Ok::<Bytes, std::io::Error>(Bytes::from(
-        byte_stream.unwrap(),
-    ))));
+    let byte_stream = byte_stream.unwrap();
+    cache.insert(identifier, byte_stream.clone());
+
+    let stream = async_iter(byte_stream);
 
     HttpResponse::Ok().streaming(stream)
 }
