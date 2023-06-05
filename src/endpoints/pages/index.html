@@ -5,10 +5,11 @@
   <title>Fractals api</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" type="image/png" href="/fractals/Mandelbrot?width=64&height=64&zoom=100&position_x=-1.4">
 </head>
 
 <body>
-  <h1>Hi</h1>
+  <h1>Fractals API</h1>
   <p>This is a web api for getting custom fractal images with a web request </p>
   <p>You can check out the source code <a href="https://github.com/Ciubix8513/fractals_api">here</a></p>
   <p>Currently contains most of the features I planned to have
@@ -35,21 +36,21 @@
       <li>
         fractals.ciubix.xyz/fractals/Mandelbrot:
         <br>
-        <img src="https://fractals.ciubix.xyz/fractals/Mandelbrot" alt="Image from GET request">
+        <img src="/fractals/Mandelbrot" alt="Image from GET request">
       </li>
       <li>
         You can also specify things like image dimensions
         <br>
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256:
         <br>
-        <img src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256" alt="Image from GET request">
+        <img src="/fractals/Mandelbrot?width=256&height=256" alt="Image from GET request">
       </li>
       <li>
         Position
         <br>
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05:
         <br>
-        <img src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05"
+        <img src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05"
           alt="Image from GET request">
       </li>
       <li>
@@ -58,7 +59,7 @@
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10:
         <br>
         <img
-          src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10"
+          src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10"
           alt="Image from GET request">
       </li>
       <li>
@@ -68,7 +69,7 @@
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000:
         <br>
         <img
-          src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000"
+          src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000"
           alt="Image from GET request">
       </li>
       <li>
@@ -77,17 +78,17 @@
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088:
         <br>
         <img
-          src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088"
+          src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088"
           alt="Image from GET request">
       </li>
       <li>
         Number of colors used by the coloring algorithm (explained <a
-          href="https://fractals.ciubix.xyz/coloring">here</a>)
+          href="/coloring">here</a>)
         <br>
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150:
         <br>
         <img
-          src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150"
+          src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150"
           alt="Image from GET request">
       </li>
       <li>
@@ -97,7 +98,7 @@
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&msaa=10:
         <br>
         <img
-          src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&,msaa=10"
+          src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&,msaa=10"
           alt="Image from GET request">
       </li>
       <li>
@@ -107,7 +108,7 @@
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&msaa=10&smooth=true:
         <br>
         <img
-          src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&,msaa=10&smooth=true"
+          src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&,msaa=10&smooth=true"
           alt="Image from GET request">
       </li>
       <li>
@@ -117,10 +118,26 @@
         fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&msaa=10&smooth=true&debug=true:
         <br>
         <img
-          src="https://fractals.ciubix.xyz/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&,msaa=10&smooth=true&debug=true"
+          src="/fractals/Mandelbrot?width=256&height=256&position_x=-1.5&position_y=-.05&zoom=10&max_iterations=2000&colors=e50000,ff8d00,ffee00,028121,004cff,770088&num_colors=150&,msaa=10&smooth=true&debug=true"
           alt="Image from GET request">
       </li>
     </ul>
+    <p>
+        The default values for the parameters are 
+        <ul>
+          <li>width: 1920</li>
+          <li>height: 1080</li>
+          <li>position_x: -0.75</li>
+          <li>position_y: 0.0</li>
+          <li>zoom: 1.0</li>
+          <li>max_iterations: 1000</li>
+          <li>colors: 55cdfc,f7a8b8,ffffff,f7a8b8,55cdfc </li>
+          <li>num_colors: 200</li>
+          <li>msaa: 1</li>
+          <li>smooth: false</li>
+          <li>debug: false</li>
+        </ul>
+    </p>
   </div>
 </body>
 
