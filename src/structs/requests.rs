@@ -28,7 +28,7 @@ impl SimplifiedFractals {
     }
 }
 
-#[derive(Debug, Clone, serde_derive::Deserialize)]
+#[derive(Debug, Clone, serde_derive::Deserialize, PartialEq)]
 pub struct RequestBody {
     pub width: Option<u32>,
     pub height: Option<u32>,
@@ -44,6 +44,8 @@ pub struct RequestBody {
     pub smooth: Option<bool>,
     pub debug: Option<bool>,
 }
+
+impl Eq for RequestBody {}
 
 impl std::hash::Hash for RequestBody {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -68,8 +70,17 @@ impl std::hash::Hash for RequestBody {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct RequestIdentifier {
     fractal: SimplifiedFractals,
     body: RequestBody,
+}
+
+impl RequestIdentifier {
+    pub fn new(fractal: SimplifiedFractals, body: &RequestBody) -> Self {
+        Self {
+            fractal,
+            body: body.clone(),
+        }
+    }
 }

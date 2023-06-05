@@ -3,12 +3,13 @@
     clippy::wildcard_imports,
     clippy::future_not_send
 )]
-use std::collections::HashMap;
 use std::env;
+use std::{collections::HashMap, sync::Mutex};
 
+use actix_web::web::Data;
 use actix_web::{middleware, App, HttpServer};
 use dotenvy::dotenv;
-use structs::rendering::PipelineStore;
+use structs::{rendering::PipelineStore, requests::RequestIdentifier};
 use utils::graphics::generate_backend;
 
 use crate::endpoints::*;
@@ -45,9 +46,10 @@ async fn main() -> std::io::Result<()> {
             .service(main_page)
             .service(coloring_page)
             .data_factory(|| async { generate_backend().await })
-            .app_data(actix_web::web::Data::new(
-                PipelineStore::new(HashMap::new()),
-            ))
+            .app_data(Data::new(Mutex::new(
+                HashMap::<RequestIdentifier, Vec<u8>>::new(),
+            )))
+            .app_data(Data::new(PipelineStore::new(HashMap::new())))
             .service(render_fractal)
             .wrap(middleware::Logger::default())
     })
@@ -58,13 +60,23 @@ async fn main() -> std::io::Result<()> {
 
 #[actix_web::test]
 async fn fractals_endpoint_test() {
+    env_logger::Builder::new()
+        .filter_module(grimoire::LOGGING_TARGET, log::LevelFilter::Debug)
+        .filter_module("actix_web", log::LevelFilter::Info)
+        .filter_module("actix_server", log::LevelFilter::Info)
+        .filter_module("wgpu", log::LevelFilter::Off)
+        .format_timestamp(None)
+        .init();
+
     let mut app = actix_web::test::init_service(
         App::new()
-            .app_data(actix_web::web::Data::new(
-                PipelineStore::new(HashMap::new()),
-            ))
+            .app_data(Data::new(PipelineStore::new(HashMap::new())))
+            .app_data(Data::new(Mutex::new(
+                HashMap::<RequestIdentifier, Vec<u8>>::new(),
+            )))
             .data_factory(|| async { generate_backend().await })
-            .service(render_fractal),
+            .service(render_fractal)
+            .wrap(middleware::Logger::default()),
     )
     .await;
     //I'm putting them all in one test, bc I had some issues with multiple tests that use the gpu
@@ -72,6 +84,14 @@ async fn fractals_endpoint_test() {
     //Mandelbrot
     let req = actix_web::test::TestRequest::with_uri("/fractals/Mandelbrot?colors=ffffff,11ffff,1100ff&position_x=-.1&position_y=1&zoom=10&debug=true&width=1024&height=1024&max_iterations=2000&num_colors=2000")
         .to_request();
+    let resp = actix_web::test::call_service(&mut app, req).await;
+    let status = resp.status();
+    assert_eq!(status, actix_web::http::StatusCode::OK);
+
+    //Mandelbrot
+    //Double request to test the cache
+    let req = actix_web::test::TestRequest::with_uri("/fractals/Mandelbrot?colors=ffffff,11ffff,1100ff&position_x=-.1&position_y=1&zoom=10&debug=true&width=1024&height=1024&max_iterations=2000&num_colors=2000")
+    .to_request();
     let resp = actix_web::test::call_service(&mut app, req).await;
     let status = resp.status();
     assert_eq!(status, actix_web::http::StatusCode::OK);
