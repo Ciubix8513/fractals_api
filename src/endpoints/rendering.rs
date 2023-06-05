@@ -129,7 +129,7 @@ async fn render_fractal(
         zoom: query.zoom.unwrap_or(grimoire::DEFAULT_ZOOM),
         position: [
             query.position_x.unwrap_or(grimoire::DEFAULT_POSITION[0]),
-            query.position_y.unwrap_or(grimoire::DEFAULT_POSITION[1]),
+            -query.position_y.unwrap_or(grimoire::DEFAULT_POSITION[1]),
         ],
         flags: {
             let mut result = u32::from(query.msaa.unwrap_or(1));
