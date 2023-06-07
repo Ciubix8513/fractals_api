@@ -7,7 +7,7 @@ use actix_web::{
     web::{self, Data},
     HttpResponse, Responder,
 };
-use std::{collections::HashMap, sync::Mutex};
+use std::sync::Mutex;
 use wgpu::CommandBuffer;
 
 use crate::{
@@ -19,6 +19,7 @@ use crate::{
     utils::{
         export::{self, async_iter},
         graphics::{generate_pipeline, to_raw_colors, vec_from_hex},
+        vec::{contains_key, get},
     },
     PipelineStore,
 };
@@ -78,7 +79,7 @@ async fn render_fractal(
     pipelines: Data<PipelineStore>,
     fractal: web::Path<SimplifiedFractals>,
     query: web::Query<RequestBody>,
-    cache: web::Data<Mutex<HashMap<RequestIdentifier, Vec<u8>>>>,
+    cache: web::Data<Mutex<Vec<(RequestIdentifier, Vec<u8>)>>>,
 ) -> impl Responder {
     let query = query.into_inner();
     let fractal = fractal.into_inner();
@@ -87,7 +88,7 @@ async fn render_fractal(
     //Putting it in a separate block so that cache is unlocked after the check
     {
         let cache = cache.lock().unwrap();
-        if let Some(data) = cache.get(&identifier) {
+        if let Some(data) = get(&cache, &identifier) {
             let stream = async_iter(data.clone());
             log::debug!(target: grimoire::LOGGING_TARGET, "Returning cached data");
             return HttpResponse::Ok().streaming(stream);
@@ -149,11 +150,11 @@ async fn render_fractal(
     //According to chat GPT you can't salvage a poisoned mutex
     let mut pipelines = pipelines.lock().unwrap();
 
-    if !pipelines.contains_key(&fractal) {
-        pipelines.insert(fractal.clone(), generate_pipeline(&fractal, &gpu.device));
+    if !contains_key(&pipelines, &fractal) {
+        pipelines.push((fractal.clone(), generate_pipeline(&fractal, &gpu.device)));
     }
 
-    let pipeline = pipelines.get(&fractal);
+    let pipeline = get(&pipelines, &fractal);
     if pipeline.is_none() {
         log::error!(target: grimoire::LOGGING_TARGET, "Could not get pipeline");
         return HttpResponse::InternalServerError().into();
@@ -222,7 +223,7 @@ async fn render_fractal(
             &gpu.device,
         )
         .copy_from_slice(bytemuck::cast_slice(&colors));
-    let command_buffer = generate_command_buffer(encoder, &texture, &buffer, pipeline);
+    let command_buffer = generate_command_buffer(encoder, &texture, &buffer, &pipeline);
     staging_belt.finish();
     gpu.queue.submit(Some(command_buffer));
     staging_belt.recall();
@@ -252,7 +253,7 @@ async fn render_fractal(
     let mut cache = cache.lock().unwrap();
 
     let byte_stream = byte_stream.unwrap();
-    cache.insert(identifier, byte_stream.clone());
+    cache.push((identifier, byte_stream.clone()));
 
     let stream = async_iter(byte_stream);
 

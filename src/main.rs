@@ -4,7 +4,7 @@
     clippy::future_not_send
 )]
 use std::env;
-use std::{collections::HashMap, sync::Mutex};
+use std::sync::Mutex;
 
 use actix_web::web::Data;
 use actix_web::{middleware, App, HttpServer};
@@ -55,9 +55,9 @@ async fn main() -> std::io::Result<()> {
             .service(coloring_page)
             .data_factory(|| async { generate_backend().await })
             .app_data(Data::new(Mutex::new(
-                HashMap::<RequestIdentifier, Vec<u8>>::new(),
+                Vec::<(RequestIdentifier, Vec<u8>)>::new(),
             )))
-            .app_data(Data::new(PipelineStore::new(HashMap::new())))
+            .app_data(Data::new(PipelineStore::new(Vec::new())))
             .service(render_fractal)
             .wrap(middleware::Logger::default())
     })
@@ -78,9 +78,9 @@ async fn fractals_endpoint_test() {
 
     let mut app = actix_web::test::init_service(
         App::new()
-            .app_data(Data::new(PipelineStore::new(HashMap::new())))
+            .app_data(Data::new(PipelineStore::new(Vec::new())))
             .app_data(Data::new(Mutex::new(
-                HashMap::<RequestIdentifier, Vec<u8>>::new(),
+                Vec::<(RequestIdentifier, Vec<u8>)>::new(),
             )))
             .data_factory(|| async { generate_backend().await })
             .service(render_fractal)

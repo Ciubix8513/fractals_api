@@ -1,5 +1,5 @@
 // #![allow(dead_code)]
-use std::{collections::HashMap, sync::Mutex};
+use std::sync::Mutex;
 
 ///Stores all need wgpu structs in the api state
 pub struct GpuStructs {
@@ -93,4 +93,4 @@ impl std::fmt::Display for Fractals {
 }
 
 ///A helper type for the api state
-pub type PipelineStore = Mutex<HashMap<Fractals, PipelineBufers>>;
+pub type PipelineStore = Mutex<Vec<(Fractals, PipelineBufers)>>;
