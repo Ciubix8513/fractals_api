@@ -7,14 +7,13 @@ use actix_web::{
     web::{self, Data},
     HttpResponse, Responder,
 };
-use std::sync::Mutex;
 use wgpu::CommandBuffer;
 
 use crate::{
     grimoire,
     structs::{
         rendering::{GpuStructs, PipelineBufers, ShaderDataUniforms},
-        requests::{RequestBody, RequestIdentifier, SimplifiedFractals},
+        requests::{Cache, RequestBody, RequestIdentifier, SimplifiedFractals},
     },
     utils::{
         export::{self, async_iter},
@@ -79,7 +78,7 @@ async fn render_fractal(
     pipelines: Data<PipelineStore>,
     fractal: web::Path<SimplifiedFractals>,
     query: web::Query<RequestBody>,
-    cache: web::Data<Mutex<Vec<(RequestIdentifier, Vec<u8>)>>>,
+    cache: web::Data<Cache>,
 ) -> impl Responder {
     let query = query.into_inner();
     let fractal = fractal.into_inner();
@@ -223,7 +222,7 @@ async fn render_fractal(
             &gpu.device,
         )
         .copy_from_slice(bytemuck::cast_slice(&colors));
-    let command_buffer = generate_command_buffer(encoder, &texture, &buffer, &pipeline);
+    let command_buffer = generate_command_buffer(encoder, &texture, &buffer, pipeline);
     staging_belt.finish();
     gpu.queue.submit(Some(command_buffer));
     staging_belt.recall();

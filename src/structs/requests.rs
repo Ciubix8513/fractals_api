@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use super::rendering::Fractals;
 
 ///Represents types of fractals that the api can render, simplified so that serde can deserialize
@@ -84,3 +86,5 @@ impl RequestIdentifier {
         }
     }
 }
+
+pub type Cache = Mutex<Vec<(RequestIdentifier, Vec<u8>)>>;
