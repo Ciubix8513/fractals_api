@@ -73,7 +73,10 @@ pub async fn generate_backend() -> Result<GpuStructs, RequestDeviceError> {
 
 #[allow(clippy::too_many_lines)]
 ///Generates a pipeline for rendering a specific type of fractal
-pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineBufers {
+pub fn generate_pipeline(
+    fractal: &Fractals,
+    device: &wgpu::Device,
+) -> Result<PipelineBufers, String> {
     log::info!(
         target: grimoire::LOGGING_TARGET,
         "Generating new pipeline for {fractal}"
@@ -84,13 +87,17 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
 
     let mut base = include_str!("../shaders/base_fragment.wgsl").to_owned();
     let fractal_fn = match fractal {
-        Fractals::Custom(_) | Fractals::Mandelbrot => include_str!("../shaders/madelbrot.wgsl"),
-        Fractals::BurningShip => include_str!("../shaders/burning_ship.wgsl"),
-        Fractals::Tricorn => include_str!("../shaders/tricorn.wgsl"),
-        Fractals::Feather => include_str!("../shaders/feather.wgsl"),
-        Fractals::Eye => include_str!("../shaders/eye.wgsl"),
+        Fractals::Custom(_) => {
+            let binding = generate_formula_shader()?;
+            binding.to_owned()
+        }
+        Fractals::Mandelbrot => include_str!("../shaders/madelbrot.wgsl").to_owned(),
+        Fractals::BurningShip => include_str!("../shaders/burning_ship.wgsl").to_owned(),
+        Fractals::Tricorn => include_str!("../shaders/tricorn.wgsl").to_owned(),
+        Fractals::Feather => include_str!("../shaders/feather.wgsl").to_owned(),
+        Fractals::Eye => include_str!("../shaders/eye.wgsl").to_owned(),
     };
-    base.push_str(fractal_fn);
+    base.push_str(&fractal_fn);
     let fragment = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: None,
         source: wgpu::ShaderSource::Wgsl(base.into()),
@@ -156,7 +163,7 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
         bind_group_layouts: &[&bg_layout],
         push_constant_ranges: &[],
     });
-    PipelineBufers {
+    Ok(PipelineBufers {
         pipeline: device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some(&format!("{fractal:#?} pipeline")),
             layout: Some(&layout),
@@ -185,7 +192,11 @@ pub fn generate_pipeline(fractal: &Fractals, device: &wgpu::Device) -> PipelineB
         info_buffer,
         storage_buffer,
         bind_group,
-    }
+    })
+}
+
+fn generate_formula_shader() -> Result<String, String> {
+    todo!()
 }
 
 #[test]

@@ -93,10 +93,6 @@ async fn render_fractal(
             return HttpResponse::Ok().streaming(stream);
         }
     }
-    //A temporary check  while it is not implemented
-    if fractal == SimplifiedFractals::Custom {
-        return HttpResponse::NotImplemented().into();
-    }
 
     if fractal == SimplifiedFractals::Custom && query.formula.is_none() {
         return HttpResponse::BadRequest()
@@ -150,7 +146,12 @@ async fn render_fractal(
     let mut pipelines = pipelines.lock().unwrap();
 
     if !contains_key(&pipelines, &fractal) {
-        pipelines.push((fractal.clone(), generate_pipeline(&fractal, &gpu.device)));
+        let pipeline = generate_pipeline(&fractal, &gpu.device);
+        if let Err(e) = pipeline {
+            return HttpResponse::BadRequest().body(e);
+        }
+
+        pipelines.push((fractal.clone(), pipeline.unwrap()));
     }
 
     let pipeline = get(&pipelines, &fractal);
