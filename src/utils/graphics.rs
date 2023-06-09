@@ -87,8 +87,8 @@ pub fn generate_pipeline(
 
     let mut base = include_str!("../shaders/base_fragment.wgsl").to_owned();
     let fractal_fn = match fractal {
-        Fractals::Custom(_) => {
-            let binding = generate_formula_shader()?;
+        Fractals::Custom(formula) => {
+            let binding = generate_formula_shader(&formula)?;
             binding.to_owned()
         }
         Fractals::Mandelbrot => include_str!("../shaders/madelbrot.wgsl").to_owned(),
@@ -195,7 +195,29 @@ pub fn generate_pipeline(
     })
 }
 
-fn generate_formula_shader() -> Result<String, String> {
+fn generate_formula_shader(formula: &str) -> Result<String, String> {
+    //Valid chars: 0-9 . * / - + ( ) ^ ; <space>
+    let valid_chars = [
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '*', '/', '-', '+', '(', ')', '^',
+        ';', ' ', 'Z', 'C',
+    ];
+
+    for c in formula.chars() {
+        if !valid_chars.contains(&c) {
+            return Err(format!("Invalid character '{c}'").to_owned());
+        }
+    }
+    //At this point the formula should contain only the valid chars
+
+    //Function declaration
+    let top_boilerplate = "fn fractal_func(z: vec2<f32>, c: vec2<f32>) -> vec2<f32> {\n";
+    let bottom_boilerplaye = "return value;\n}";
+
+    //Replace (num;num) with vec2<f32>(num,num);
+    //Replace x^y with Pow(x,y)
+    //Replace x^2 with complex_square(x)
+    //Replace x^3 with complex_cube(x)
+
     todo!()
 }
 
