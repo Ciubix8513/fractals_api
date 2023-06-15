@@ -3,9 +3,12 @@ use std::io::Cursor;
 use actix_web::web::Bytes;
 use image::{ImageBuffer, ImageError, Rgba};
 
+use crate::grimoire;
+
 ///Transforms an array of raw image bytes into a specified format
 pub fn arr_to_image(
     img: &[u8],
+    bytes_per_row: u32,
     width: u32,
     height: u32,
     format: image::ImageOutputFormat,
@@ -19,19 +22,33 @@ pub fn arr_to_image(
         })
         .collect::<Vec<Rgba<u8>>>();
 
+    log::debug!(target: grimoire::LOGGING_TARGET, "Collected the array");
+    log::debug!(
+        target: grimoire::LOGGING_TARGET,
+        "BPR = {bytes_per_row}, width = {width}"
+    );
     let mut image_buffer = ImageBuffer::<Rgba<u8>, Vec<u8>>::new(width, height);
     let mut x = 0;
     let mut y = 0;
 
     for i in img {
-        let pixel = image_buffer.get_pixel_mut(x, y);
-        x += 1;
-        if x == width {
-            x = 0;
-            y += 1;
+        //Remove padding
+        if x >= width {
+            x += 1;
+            if x == bytes_per_row {
+                x = 0;
+                y += 1;
+            }
+            continue;
         }
+        let pixel = image_buffer.get_pixel_mut(x, y);
         *pixel = i;
+        x += 1;
     }
+    log::debug!(
+        target: grimoire::LOGGING_TARGET,
+        "Iterated through the array"
+    );
     let mut byte_stream = Vec::new();
     image_buffer.write_to(&mut Cursor::new(&mut byte_stream), format)?;
 

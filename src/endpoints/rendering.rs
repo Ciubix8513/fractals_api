@@ -28,11 +28,10 @@ fn generate_command_buffer(
     texture: &wgpu::Texture,
     buffer: &wgpu::Buffer,
     pipeline: &PipelineBufers,
+    bytes_per_row: u32,
 ) -> CommandBuffer {
     let mut encoder = encoder;
     let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-    let width = texture.width();
-    let height = texture.height();
     {
         //Clear
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -56,12 +55,12 @@ fn generate_command_buffer(
         //Copy contents of render texture to the buffer
         encoder.copy_texture_to_buffer(
             texture.as_image_copy(),
-            wgpu::ImageCopyBufferBase {
+            wgpu::ImageCopyBuffer {
                 buffer,
                 layout: wgpu::ImageDataLayout {
                     offset: 0,
-                    bytes_per_row: Some(width * 4),
-                    rows_per_image: Some(height),
+                    bytes_per_row: Some(bytes_per_row),
+                    rows_per_image: None,
                 },
             },
             texture.size(),
@@ -175,14 +174,16 @@ async fn render_fractal(
         sample_count: 1,
         mip_level_count: 1,
     });
+    let size = texture.size();
+    let format_block_size = texture.format().block_size(None).unwrap();
+    let mut bytes_per_row = size.width * format_block_size;
+    if bytes_per_row % 256 != 0 {
+        bytes_per_row = bytes_per_row + (256 - (bytes_per_row % 256));
+    }
     let buffer = gpu.device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
         usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        size: {
-            let size = texture.size();
-            let format = texture.format();
-            u64::from(size.width * size.height * format.block_size(None).unwrap())
-        },
+        size: { u64::from(bytes_per_row * size.height) },
         mapped_at_creation: false,
     });
 
@@ -222,7 +223,8 @@ async fn render_fractal(
             &gpu.device,
         )
         .copy_from_slice(bytemuck::cast_slice(&colors));
-    let command_buffer = generate_command_buffer(encoder, &texture, &buffer, pipeline);
+    let command_buffer =
+        generate_command_buffer(encoder, &texture, &buffer, pipeline, bytes_per_row);
     staging_belt.finish();
     gpu.queue.submit(Some(command_buffer));
     staging_belt.recall();
@@ -239,7 +241,13 @@ async fn render_fractal(
         .iter()
         .copied()
         .collect::<Vec<u8>>();
-    let byte_stream = export::arr_to_image(&img, width, height, image::ImageOutputFormat::Png);
+    let byte_stream = export::arr_to_image(
+        &img,
+        bytes_per_row / 4,
+        width,
+        height,
+        image::ImageOutputFormat::Png,
+    );
 
     if byte_stream.is_err() {
         log::error!(

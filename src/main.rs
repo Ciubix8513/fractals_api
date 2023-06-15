@@ -97,6 +97,14 @@ async fn fractals_endpoint_test() {
     assert_eq!(status, actix_web::http::StatusCode::OK);
 
     //Mandelbrot
+    //Testing improper? resolution
+    let req = actix_web::test::TestRequest::with_uri("/fractals/Mandelbrot?colors=ffffff,11ffff,1100ff&position_x=-.1&position_y=1&zoom=10&debug=true&width=1500&height=500&max_iterations=2000&num_colors=2000")
+        .to_request();
+    let resp = actix_web::test::call_service(&mut app, req).await;
+    let status = resp.status();
+    assert_eq!(status, actix_web::http::StatusCode::OK);
+
+    //Mandelbrot
     //Double request to test the cache
     let req = actix_web::test::TestRequest::with_uri("/fractals/Mandelbrot?colors=ffffff,11ffff,1100ff&position_x=-.1&position_y=1&zoom=10&debug=true&width=1024&height=1024&max_iterations=2000&num_colors=2000")
     .to_request();
