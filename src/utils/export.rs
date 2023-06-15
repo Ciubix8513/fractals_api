@@ -33,7 +33,7 @@ pub fn arr_to_image(
 
     for i in img {
         //Remove padding
-        if x >= width {
+        if width != bytes_per_row && x >= width {
             x += 1;
             if x == bytes_per_row {
                 x = 0;
@@ -41,9 +41,15 @@ pub fn arr_to_image(
             }
             continue;
         }
-        let pixel = image_buffer.get_pixel_mut(x, y);
-        *pixel = i;
+
+        *image_buffer.get_pixel_mut(x, y) = i;
+
         x += 1;
+        //This is kind of a hacky fix, but it works
+        if x == width && width == bytes_per_row {
+            x = 0;
+            y += 1;
+        }
     }
     log::debug!(
         target: grimoire::LOGGING_TARGET,
